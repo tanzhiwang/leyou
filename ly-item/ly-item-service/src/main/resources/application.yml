@@ -1,0 +1,22 @@
+server:
+#  8081被占用了，换个没被占用的8082
+  port: 8082
+spring:
+  application:
+    name: item-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/yun6
+    username: root
+    password: monkey1024
+#   看到url有mysql就会自动使用mysl的驱动，因此这里不用写驱动
+eureka:
+  client:
+    service-url:
+#      妈蛋，这里忘记在http:后面加//了，这样子启动报错要不是运气好找到一个一样的错，怕是要半天找不出问题所在
+      defaultZone: http://127.0.0.1:10086/eureka
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
