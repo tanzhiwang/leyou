@@ -180,4 +180,17 @@ public class SearchService {
         List<Goods> goodsList = result.getContent();
         return new PageResult<>(total,totalPage,goodsList);
     }
+
+    public void createOrUpdateIndex(Long spuId) {
+        //查询spu
+        Spu spu = goodsClient.querySpuById(spuId);
+        //构建goods
+        Goods goods = buildGoods(spu);
+        //存入索引库
+        repository.save(goods);
+    }
+
+    public void deleteIndex(Long spuId) {
+        repository.deleteById(spuId);
+    }
 }

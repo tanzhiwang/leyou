@@ -9,6 +9,19 @@ spring:
     username: root
     password: monkey1024
 #   看到url有mysql就会自动使用mysl的驱动，因此这里不用写驱动
+  rabbitmq:
+    host: 102.168.1.141
+    username: leyou
+    password: qwet1234
+    virtual-host: /leyou
+    template:
+      retry:
+        enabled: true
+        initial-interval: 10000ms
+        max-interval: 30000ms
+        multiplier: 2
+      exchange: ly.item.exchange
+    publisher-confirms: true
 eureka:
   client:
     service-url:

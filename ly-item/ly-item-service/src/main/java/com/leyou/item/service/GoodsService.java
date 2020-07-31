@@ -11,6 +11,7 @@ import com.leyou.item.mapper.SpuMapper;
 import com.leyou.item.mapper.StockMapper;
 import com.leyou.item.pojo.*;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,8 @@ public class GoodsService {
     private SkuMapper skuMapper;
     @Autowired
     private StockMapper stockMapper;
+    @Autowired
+    private AmqpTemplate amqpTemplate;
 
     public PageResult<Spu> querySpuByPage(Integer page, Integer rows, Boolean saleable, String key) {
         //分页
@@ -77,6 +80,10 @@ public class GoodsService {
         }
     }
 
+    /**
+     * 新增商品
+     * @param spu
+     */
     @Transactional
     public void saveGoods(Spu spu) {
         //新增spu
@@ -95,6 +102,8 @@ public class GoodsService {
         detailMapper.insert(detail);
         //新增sku和库存
         saveSkuAndStock(spu);
+        //发送mq消息
+        amqpTemplate.convertAndSend("item.insert",spu.getId());
 
     }
 
@@ -121,7 +130,6 @@ public class GoodsService {
             stock.setStock(sku.getStock());
 
             stockList.add(stock);
-            System.out.println("---------count:"+count+"-------");
         }
         //批量新增库存
         count = stockMapper.insertList(stockList);
@@ -144,7 +152,7 @@ public class GoodsService {
     }
 
     /**
-     * 根据商品id查询具体类型的库存商品
+     * 根据商品id(spuId)查询具体类型的库存商品
      * @param spuId
      * @return
      */
@@ -176,7 +184,7 @@ public class GoodsService {
 
         Map<Long, Integer> stockMap = stockList.stream()
                 .collect(Collectors.toMap(Stock::getSkuId, Stock::getStock));
-        skuList.forEach(s->s.setStock(stockMap.get(sku.getId())));
+        skuList.forEach(s->s.setStock(stockMap.get(s.getId())));
         return skuList;
     }
 
@@ -194,7 +202,7 @@ public class GoodsService {
         sku.setSpuId(spu.getId());
         //查询sku
         List<Sku> skuList = skuMapper.select(sku);
-        if(CollectionUtils.isEmpty(skuList)){
+        if(!CollectionUtils.isEmpty(skuList)){
             //删除sku
             skuMapper.delete(sku);
             //删除stock
@@ -218,6 +226,9 @@ public class GoodsService {
         }
         //新增sku和stock
         saveSkuAndStock(spu);
+
+        //发送mq消息
+        amqpTemplate.convertAndSend("item.update",spu.getId());
 
     }
 
