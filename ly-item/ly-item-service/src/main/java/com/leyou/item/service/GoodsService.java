@@ -103,7 +103,7 @@ public class GoodsService {
         //新增sku和库存
         saveSkuAndStock(spu);
         //发送mq消息
-        amqpTemplate.convertAndSend("item.insert",spu.getId());
+        amqpTemplate.convertAndSend("ly.item.exchange","item.insert",spu.getId());
 
     }
 
@@ -228,8 +228,9 @@ public class GoodsService {
         saveSkuAndStock(spu);
 
         //发送mq消息
-        amqpTemplate.convertAndSend("item.update",spu.getId());
-
+        //System.out.println("---------1---------");
+        amqpTemplate.convertAndSend("ly.item.exchange","item.update",spu.getId());
+        //System.out.println("---------2---------");
     }
 
     public Spu querySpuById(Long id) {

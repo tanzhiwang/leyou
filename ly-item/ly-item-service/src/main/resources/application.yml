@@ -10,7 +10,8 @@ spring:
     password: monkey1024
 #   看到url有mysql就会自动使用mysl的驱动，因此这里不用写驱动
   rabbitmq:
-    host: 102.168.1.141
+    #配置地址192写成102，花了大概4、5个小时找问题，果然状态不好犯错真的让人难受
+    host: 192.168.1.141
     username: leyou
     password: qwet1234
     virtual-host: /leyou
