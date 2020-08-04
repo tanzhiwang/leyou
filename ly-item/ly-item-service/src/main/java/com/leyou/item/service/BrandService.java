@@ -81,4 +81,13 @@ public class BrandService {
         }
         return list;
     }
+
+    public List<Brand> queryByIds(List<Long> ids) {
+        List<Brand> brands = brandMapper.selectByIdList(ids);
+        //System.out.println("item-service的brand的集合查询结果："+brands);
+        if(CollectionUtils.isEmpty(brands)){
+            throw new LyException(ExceptionEnum.BRAND_NOT_FOUND);
+        }
+        return brands;
+    }
 }

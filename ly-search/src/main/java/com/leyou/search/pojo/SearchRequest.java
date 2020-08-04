@@ -4,7 +4,7 @@ import lombok.Data;
 
 import java.util.Map;
 
-@Data
+
 public class SearchRequest {
     private String key;// 搜索条件
 
@@ -37,5 +37,13 @@ public class SearchRequest {
 
     public Integer getSize() {
         return DEFAULT_SIZE;
+    }
+
+    public Map<String, String> getFilter() {
+        return filter;
+    }
+
+    public void setFilter(Map<String, String> filter) {
+        this.filter = filter;
     }
 }

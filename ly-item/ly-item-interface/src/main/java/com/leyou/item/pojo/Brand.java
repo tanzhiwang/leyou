@@ -14,4 +14,5 @@ public class Brand {
     private Long id;
     private String name;//品牌名称
     private Character letter;
+    private String image;//图片地址
 }
