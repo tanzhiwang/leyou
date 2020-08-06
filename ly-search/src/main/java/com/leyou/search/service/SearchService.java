@@ -17,6 +17,8 @@ import com.leyou.search.pojo.SearchResult;
 import com.leyou.search.repository.GoodsRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.queryparser.xml.builders.BooleanQueryBuilder;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -181,8 +183,9 @@ public class SearchService {
         queryBuilder.withSourceFilter(new FetchSourceFilter(new String[]{"id", "subTitle", "skus"}, null));
         //1.分页
         queryBuilder.withPageable(PageRequest.of(page, size));
-        //2.过滤
-        QueryBuilder basicQuery = QueryBuilders.matchQuery("all", key);
+        //2.搜索条件
+        QueryBuilder basicQuery = buildBasicQuery(request);
+        //QueryBuilders.matchQuery("all", key);
         queryBuilder.withQuery(basicQuery);
         //3.聚合分类和品牌
         //3.1聚合分类
@@ -211,6 +214,27 @@ public class SearchService {
         return new SearchResult(total, totalPage, goodsList, categories, brands, specs);
     }
 
+    private QueryBuilder buildBasicQuery(SearchRequest request) {
+        //创建布尔查询
+        BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
+        //查询条件
+        queryBuilder.must(QueryBuilders.matchQuery("all", request.getKey()));
+        //过滤条件
+        Map<String, String> map = request.getFilter();
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            String key = entry.getKey();
+            //处理key
+            if (!"cid3".equals(key) && !"brandId".equals(key)) {
+                key = "specs." + key + ".keyword";
+            }
+            String value = entry.getValue();
+            queryBuilder.filter(QueryBuilders.termQuery(key, value));
+        }
+        queryBuilder.filter();
+
+        return queryBuilder;
+    }
+
     private List<Map<String, Object>> buildSpecificationAgg(Long cid, QueryBuilder basicQuery) {
         List<Map<String, Object>> specs = new ArrayList<>();
         //1.查询需要聚合的规格参数
@@ -223,7 +247,7 @@ public class SearchService {
         for (SpecParam param : params) {
             String name = param.getName();
             queryBuilder.addAggregation(AggregationBuilders.terms(name)
-                    .field("specs."+name+".keyword"));
+                    .field("specs." + name + ".keyword"));
         }
         //3.获取结果
         AggregatedPage<Goods> result = template.queryForPage(queryBuilder.build(), Goods.class);
@@ -237,9 +261,9 @@ public class SearchService {
             List<String> options = terms.getBuckets().stream().map(b -> b.getKeyAsString())
                     .collect(Collectors.toList());
             //准备map
-            Map<String,Object>map=new HashMap<>();
-            map.put("k",name);
-            map.put("options",options);
+            Map<String, Object> map = new HashMap<>();
+            map.put("k", name);
+            map.put("options", options);
             specs.add(map);
         }
         return specs;
